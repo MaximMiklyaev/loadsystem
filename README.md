@@ -30,9 +30,24 @@
  
 #укажем запуск командной оболочки bash, необходимо удалить информацию от ro до rhgb quint 
 
+
+   #1
+
+#прописать вместо ro 
+
+          rw init=/sysroot/bin/sh
+  
+#нажмите 
+
+         Ctrl+X 
+
+#и дождитесь загрузки операционной системы в однопользовательском режиме (single-user mode). 
+
 #для отключения SELinux, сконфигурируйте SELINUX=disabled в /etc/selinux/config
 
-          vi /etc/selinux/config
+          chroot /sysroot
+
+          nano /etc/selinux/config
 
 
           # This file controls the state of SELinux on the system.
@@ -46,19 +61,13 @@
           #       mls - Multi Level Security protection.
           SELINUXTYPE=targeted
 
+#нажмите 
 
+          Ctrl+X
 
-   #1
+#подтверждаем изменения 
 
-#прописать вместо ro 
-
-          rw init=/sysroot/bin/sh
-  
-#нажмите Ctrl+X и дождитесь загрузки операционной системы в однопользовательском режиме (single-user mode). 
-
-#для установки нового root-пароля введите команду
-
-          chroot /sysroot
+          y
 
 #далее команду
 
@@ -66,7 +75,7 @@
 
 #вводим новый root-пароль
 
-           password
+          password
 
 #cохраняем изменения командами
 
@@ -83,23 +92,49 @@
 
           rw init=/bin/sh
   
-#нажмите Ctrl+X и дождитесь загрузки операционной системы в однопользовательском режиме (single-user mode). 
+#нажмите 
 
-#работа с корнем
+         Ctrl+X 
 
-           mount -o remount,rw /
+#и дождитесь загрузки операционной системы в однопользовательском режиме (single-user mode). 
+
+#для отключения SELinux, сконфигурируйте SELINUX=disabled в /etc/selinux/config
+
+          chroot /sysroot
+
+          nano /etc/selinux/config
+
+
+          # This file controls the state of SELinux on the system.
+          # SELINUX= can take one of these three values:
+          #       enforcing - SELinux security policy is enforced.
+          #       permissive - SELinux prints warnings instead of enforcing.
+          #       disabled - No SELinux policy is loaded.
+          SELINUX=disabled
+          # SELINUXTYPE= can take one of these two values:
+          #       targeted - Targeted processes are protected,
+          #       mls - Multi Level Security protection.
+          SELINUXTYPE=targeted
+
+#нажмите 
+
+          Ctrl+X
+
+#подтверждаем изменения 
+
+          y
+
+#далее команду
+
+          passwd root
 
 #вводим новый root-пароль
 
-           passwd
+          password
 
-#проверяем включен для SELUX 
-  
-           cat /etc/selinux/config
+#cохраняем изменения командами
 
-#если SELINUX=enforcing, то заменяем или на permissive или disabled и перезагружаемся
-
-          vi /etc/selinux/config
+          exit
 
 #перегружаем
 
@@ -111,123 +146,185 @@
 
           rd.break
 
-#нажмите Ctrl+X и дождитесь загрузки операционной системы в однопользовательском режиме (single-user mode). 
-    
+#нажмите 
 
-#работа с корнем
+         Ctrl+X 
 
-           mount -o remount,rw /sysroot
+#и дождитесь загрузки операционной системы в однопользовательском режиме (single-user mode). 
 
-           chroot /sysroot
+#для отключения SELinux, сконфигурируйте SELINUX=disabled в /etc/selinux/config
 
-           passwd root
+          chroot /sysroot
 
-#после смены пароля необходимо создать скрытый файл .autorelabel в /, выполнив
+          nano /etc/selinux/config
 
-            touch /.autorelabel
 
+          # This file controls the state of SELinux on the system.
+          # SELINUX= can take one of these three values:
+          #       enforcing - SELinux security policy is enforced.
+          #       permissive - SELinux prints warnings instead of enforcing.
+          #       disabled - No SELinux policy is loaded.
+          SELINUX=disabled
+          # SELINUXTYPE= can take one of these two values:
+          #       targeted - Targeted processes are protected,
+          #       mls - Multi Level Security protection.
+          SELINUXTYPE=targeted
+
+#нажмите 
+
+          Ctrl+X 
+
+#подтверждаем изменения 
+
+          y
+
+#далее команду
+
+          passwd root
+
+#вводим новый root-пароль
+
+          password
+
+#cохраняем изменения командами
+
+          exit
 
 #перегружаем
 
-           reboot
+          reboot
+
+#установить систему с LVM, после чего переименовать VG
+
+#первым делом посмотрим на текущее состояние системы
+
+        vgs
+#вывод
+
+          VG         #PV #LV #SN Attr   VSize   VFree
+          VolGroup00   1   2   0 wz--n- <38.97g    0
 
 
+#далее можем поменять название VG
 
-   инф. server_script.sh
+        vgrename VolGroup00 loadRoot
 
-                         #!/bin/sh
-                         set -eux
-                         echo "HM4"
-                         whoami
-                         uname -a
-                         hostname -f
-                         ip addr show dev eth1
-                         echo "commands"
-                         #переходим под root права
-                         sudo -i
-                         #устанавка утилит на сервер
-                         yum install -y nfs-utils
-                         #включаем сервисы nfs сервера
-                         systemctl enable rpcbind
-                         systemctl enable nfs-server
-                         systemctl enable rpc-statd
-                         systemctl enable nfs-idmapd
-                         #запуск сервисов nfs сервера
-                         systemctl start rpcbind
-                         systemctl start nfs-server
-                         systemctl start rpc-statd
-                         systemctl start nfs-idmapd
-                         #создание дирректории для общего доступа
-                         mkdir -p /usr/shared/
-                         #назначение прав данной дирректории
-                         chmod 0777 /usr/shared/
-                         #конфигурируем exports
-                         cat << EOF | sudo tee /etc/exports
-                         /usr/shared/ 192.168.10.0/24(rw,sync)
-                         EOF
-                         #применяем изменения
-                         exportfs -ra
-                         #включаем и запускаем firewalld
-                         systemctl enable firewalld
-                         systemctl start firewalld
-                         #включаем сервисы
-                         firewall-cmd --permanent --add-service=nfs3
-                         firewall-cmd --permanent --add-service=mountd
-                         firewall-cmd --permanent --add-service=rpc-bind
-                         firewall-cmd --reload
-                         #создаем папку uploads в расшареной дирректории
-                         mkdir /usr/shared/uploads
- 
-#при поднятие nfsClient запускается скрипт client_script.sh
+#смотрим новое название
 
-   инф. server_script.sh
+       ls -l /dev/mapper
 
-                          #!/bin/sh
-                          set -eux
-                          echo "HM4"
-                          whoami
-                          uname -a
-                          hostname -f
-                          ip addr show dev eth1
-                          echo "mount NFSv3 UDP"
-                          echo "test mount NFSv4"
-                          #переходим под root права
-                          sudo -i
-                          #устанавка утилит на клиенте
-                          yum install -y nfs-utils
-                          #включаем и запускаем firewalld
-                          systemctl enable firewalld
-                          systemctl start firewalld
-                          #добавляем запись в fstab для автоматического монтирования
-                          echo "192.168.10.10:/usr/shared /mnt nfs rw,vers=3,sync,proto=udp,rsize=32768,wsize=32768 0 0" >> /etc/fstab
-                          #монтируем указанный в fstab каталог в /mnt
-                          mount /mnt/
+#вывод
 
-#проверка примонтированного диска на клиенте
+          total 0
+          crw------- 1 root root 10, 236 Nov 26 03:40 control
+          lrwxrwxrwx 1 root root       7 Nov 26 03:43 loadRoot-LogVol00 -> ../dm-0
+          lrwxrwxrwx 1 root root       7 Nov 26 03:43 loadRoot-LogVol01 -> ../dm-1
+#запаминаем
 
-#подключаемся к клиентской VM
+          loadRoot-LogVol00
+          loadRoot-LogVol01
 
-    vagrant ssh nfsClient
+#далее будем править файлы, чтобы в дальнейшем мы могли загрузиться.(/etc/fstab, /etc/default/grub, /boot/grub2/grub.cfg) 
 
-#
+#заходим в эти файлы и меняем старое название на новое которое запаминали
 
-    lsblk
+       nano /etc/fstab
 
-    вывод:
-          NAME   MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
-          sda      8:0    0  40G  0 disk
-          `-sda1   8:1    0  40G  0 part /
+       nano /etc/default/grub
 
-#
+       nano /boot/grub2/grub.cfg
 
-    df -h
+#далее пересоздаем initrd image
 
-    вывод:
-          Filesystem                 Size  Used Avail Use% Mounted on
-          devtmpfs                   111M     0  111M   0% /dev
-          tmpfs                      118M     0  118M   0% /dev/shm
-          tmpfs                      118M  8.5M  110M   8% /run
-          tmpfs                      118M     0  118M   0% /sys/fs/cgroup
-          /dev/sda1                   40G  3.1G   37G   8% /
-          192.168.10.10:/usr/shared   40G  3.1G   37G   8% /mnt
-          tmpfs                       24M     0   24M   0% /run/user/1000
+       mkinitrd -f -v /boot/initramfs-$(uname -r).img $(uname -r)
+
+#перезагружаем ПК, теперь у нас система загружается с новым названием VG, проверяем:
+
+       vgs
+
+#скрипты модулей хранятся в каталоге /usr/lib/dracut/modules.d/. Для того чтобы добавить свой модуль создаем там папку с именем 01test.
+
+        mkdir /usr/lib/dracut/modules.d/new
+
+#переходим в директорию
+
+        cd /usr/lib/dracut/modules.d/new/
+
+#далее создаем 2 skripts - module-setup.sh и test.sh
+
+       touch module-setup.sh
+
+       touch module-new.sh
+
+#прописываем
+
+         nano module-setup.sh
+
+       #!/bin/bash
+
+       check() {
+       return 0
+   }
+
+       depends() {
+       return 0
+   }
+
+       install() {
+       inst_hook cleanup 00 "${moddir}/module-test.sh"
+   }
+
+#прописываем
+
+         nano module-new.sh
+
+
+          #!/bin/bash
+
+          exec 0<>/dev/console 1<>/dev/console 2<>/dev/console
+          cat <<'msgend'
+
+          Hello! You are in dracut module!
+
+          ___________________
+         < I'm dracut module >
+          -------------------
+          \
+          \
+             \---/  \\
+            |<> <>| ||
+            |  *  |//
+           //'''''')
+           \\     |
+             ======
+             ||  ||
+             --  --
+         msgend
+         sleep 10
+         echo " continuing...."
+
+#делаем их исполняемыми
+
+       chmod +x module-setup.sh
+
+       chmod +x module-new.sh
+
+#далее выполняем команду
+
+        dracut -f -v
+
+#Можно посмотреть какие модули загружены в образ
+
+        lsinitrd -m /boot/initramfs-3.10.0-862.2.3.el7.x86_64.img | grep new
+
+#После чего можно пойти двумя путями для проверки: 
+
+#1.перезагрузиться и руками выключить опции rghb и quiet и увидеть вывод 
+
+#2.либо отредактировать grub.cfg убрав эти опции
+
+#Редактируем grub.cfg
+
+       nano /boot/grub2/grub.cfg
+
+       reboot

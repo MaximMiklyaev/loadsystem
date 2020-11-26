@@ -69,6 +69,7 @@ Vagrant.configure("2") do |config|
             mkdir -p ~root/.ssh
             cp ~vagrant/.ssh/auth* ~root/.ssh
             yum install -y mdadm smartmontools hdparm gdisk
+            sudo yum install -y nano
           SHELL
   
         end
